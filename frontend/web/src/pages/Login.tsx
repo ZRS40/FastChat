@@ -18,6 +18,14 @@ export default function Login() {
     if (res.ok) {
       const data = await res.json()
       localStorage.setItem('token', data.access_token)
+      // Récupérer l'id utilisateur
+      const userRes = await fetch('http://localhost:8000/api/v1/users/me', {
+        headers: { 'Authorization': `Bearer ${data.access_token}` }
+      })
+      if (userRes.ok) {
+        const userData = await userRes.json()
+        localStorage.setItem('user_id', userData.id)
+      }
       window.dispatchEvent(new Event('auth:changed'))
     } else {
       alert(isSignup ? 'Sign up failed' : 'Login failed')

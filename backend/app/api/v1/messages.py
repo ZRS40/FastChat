@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from ...db.session import get_db
 from ...models.message import Message
-from ...schemas.message import MessageCreate, MessageOut
+from ...schemas.message import MessageCreate, MessageOut, MessageWithSender
 from ...models.user import User
 from ...core.config import settings
 from ..v1.users import get_current_user
@@ -17,16 +17,30 @@ router = APIRouter()
 security = HTTPBearer(auto_error=False)
 
 
-@router.get("/", response_model=List[MessageOut])
+@router.get("/", response_model=List[MessageWithSender])
 def list_messages(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # fetch last 100 messages where current user is sender or recipient
-    return (
+    messages = (
         db.query(Message)
         .filter((Message.sender_id == current_user.id) | (Message.recipient_id == current_user.id))
         .order_by(Message.id.desc())
         .limit(100)
         .all()
     )
+    # Ajoute le username du sender ET du destinataire dans chaque message
+    result = []
+    for msg in messages:
+        msg_dict = {
+            "id": msg.id,
+            "recipient_id": msg.recipient_id,
+            "recipient_username": msg.recipient.username if msg.recipient else None,
+            "content": msg.content,
+            "created_at": msg.created_at,
+            "sender_id": msg.sender_id,
+            "sender_username": msg.sender.username if msg.sender else None,
+        }
+        result.append(msg_dict)
+    return result
 
 
 @router.post("/", response_model=MessageOut)
