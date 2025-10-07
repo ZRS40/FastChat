@@ -80,10 +80,6 @@ export default function Chat() {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Top banner with logout button */}
-      <div className="w-full flex items-center justify-end bg-gray-100 border-b p-3">
-        <button className="border px-3 py-1 rounded" onClick={() => { localStorage.removeItem('token'); window.dispatchEvent(new Event('auth:changed')) }}>Déconnexion</button>
-      </div>
       <div className="flex-1 grid grid-cols-[260px_1fr]">
         {/* Menu latéral conversations */}
         <div className="border-r bg-gray-50 flex flex-col">
@@ -126,6 +122,7 @@ export default function Chat() {
                     {menuOpen && (
                       <div className="absolute right-0 mt-2 bg-white border rounded shadow w-40 z-10">
                         <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={() => { setProfileOpen(true); setMenuOpen(false) }}>Profile</button>
+                        <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={() => { localStorage.removeItem('token'); window.dispatchEvent(new Event('auth:changed')); setMenuOpen(false); }}>Déconnexion</button>
                       </div>
                     )}
                   </div>
@@ -135,17 +132,17 @@ export default function Chat() {
                     .filter(m => (m.sender_id === myId && m.recipient_id === recipientId) || (m.sender_id === recipientId && m.recipient_id === myId))
                     .map((m, idx) => {
                       const when = m.created_at ? new Date(m.created_at).toLocaleTimeString() : '';
-                      // Always show the other user's name
+                      // Sent messages: display 'me', received: display sender's username
                       let displayName = '';
-                      if (m.sender_id === myId) {
-                        // I sent the message, show recipient's name
-                        displayName = m.recipient_username || '';
+                      if (m.from_me) {
+                        displayName = 'me';
                       } else {
-                        // I received the message, show sender's name
                         displayName = m.sender_username || '';
                       }
+                      // Sent messages: align right, blue background. Received: align left, gray background.
+                      const msgClass = m.from_me ? 'bg-blue-100 text-right ml-auto' : 'bg-gray-100 text-left mr-auto';
                       return (
-                        <div key={idx} className="bg-gray-100 p-2 rounded">
+                        <div key={idx} className={`p-2 rounded max-w-[70%] ${msgClass}`}> 
                           <div className="text-xs text-gray-500 mb-1">{displayName} • {when}</div>
                           <div>{m.content}</div>
                         </div>

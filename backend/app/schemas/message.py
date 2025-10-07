@@ -9,6 +9,7 @@ class MessageWithSender(BaseModel):
     sender_username: str | None = None
     content: str
     created_at: datetime | None = None
+    from_me: bool = False
 
     class Config:
         orm_mode = True

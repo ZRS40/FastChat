@@ -27,17 +27,18 @@ def list_messages(db: Session = Depends(get_db), current_user: User = Depends(ge
         .limit(100)
         .all()
     )
-    # Ajoute le username du sender ET du destinataire dans chaque message
+    # Ajoute le username du sender ET du destinataire et un flag from_me
     result = []
     for msg in messages:
         msg_dict = {
             "id": msg.id,
             "recipient_id": msg.recipient_id,
             "recipient_username": msg.recipient.username if msg.recipient else None,
-            "content": msg.content,
-            "created_at": msg.created_at,
             "sender_id": msg.sender_id,
             "sender_username": msg.sender.username if msg.sender else None,
+            "content": msg.content,
+            "created_at": msg.created_at,
+            "from_me": msg.sender_id == current_user.id,
         }
         result.append(msg_dict)
     return result
